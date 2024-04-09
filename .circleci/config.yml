@@ -9,7 +9,7 @@ jobs:
     steps:
     - run:
         name: Authn with Dockerhub
-        command: echo “${DOCKERHUB_PASSWORD}” | docker login -u camelcat —-password-stdin
+        command: echo “${DOCKERHUB_PASSWORD}” | docker login -u camelcat --password-stdin
     - run:
         name: Build
         command: docker build -t camelcat/zauthn:${CIRCLE_BRANCH}-${TAG_POSTFIX} .
