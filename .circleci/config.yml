@@ -8,11 +8,14 @@ jobs:
       TAG_POSTFIX: amd64
     steps:
     - run:
+        name: Authn with Dockerhub
+        command: echo “${DOCKERHUB_PASSWORD}” | docker login -u camelcat —-password-stdin
+    - run:
         name: Build
         command: docker build -t camelcat/zauthn:${CIRCLE_BRANCH}-${TAG_POSTFIX} .
     - run:
         name: Push
-        command: docker push
+        command: docker push camelcat/zauthn:${CIRCLE_BRANCH}-${TAG_POSTFIX}
 
   build-arm64:
     <<: *build
@@ -30,7 +33,9 @@ jobs:
     - run:
         name: Combine Manifest
         command: |-
-          manifest-tool push from-args \
+          echo "${DOCKERHUB_PASSWORD}" | manifest-tool push from-args \
+            --username camelcat \
+            --password - \
             --platforms linux/amd64,linux/arm64 \
             --template camelcat/zauthn:${CIRCLE_BRANCH}-ARCH \
             --target camelcat/zauthn:$(cat /tmp/.version) \
