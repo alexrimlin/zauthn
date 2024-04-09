@@ -1,0 +1,9 @@
+plugins:
+  - "@semantic-release/commit-analyzer"
+  - - "@semantic-release/exec"
+    - analyzeCommitsCmd: "echo \"${lastRelease.version}\" > /tmp/.version"
+      prepareCmd: "echo \"${nextRelease.version}\" > /tmp/.version"
+  - "@semantic-release/release-notes-generator"
+  - "@semantic-release/changelog"
+  - "@semantic-release/github"
+tagFormat: v${version}

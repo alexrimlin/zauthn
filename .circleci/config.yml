@@ -1,0 +1,58 @@
+version: 2.1
+
+jobs:
+  build: &build
+    machine:
+      image: ubuntu-2004:current
+    environment:
+      TAG_POSTFIX: amd64
+    steps:
+    - run:
+        name: Build
+        command: docker build -t camelcat/zauthn:${CIRCLE_BRANCH}-${TAG_POSTFIX} .
+    - run:
+        name: Push
+        command: docker push
+
+  build-arm64:
+    <<: *build
+    resource_class: arm.medium
+    environment:
+      TAG_POSTFIX: arm64
+
+  release:
+    docker:
+    - image: camelcat/semantic-relase:21-alpine3.18-1
+    steps:
+    - run:
+        name: Release
+        command: semantic-release
+    - run:
+        name: Combine Manifest
+        command: |-
+          manifest-tool push from-args \
+            --platforms linux/amd64,linux/arm64 \
+            --template camelcat/zauthn:${CIRCLE_BRANCH}-ARCH \
+            --target camelcat/zauthn:$(cat /tmp/.version) \
+            --tags ${CIRCLE_BRANCH},${CIRCLE_SHA1}
+workflows:
+  main:
+    when:
+      or:
+      - equal: [ beta, << pipeline.git.branch >> ]
+      - equal: [ main, << pipeline.git.branch >> ]
+      - equal: [ ci, << pipeline.git.branch >> ]
+    jobs:
+    - build
+    - build-arm64
+    # - test:
+    #     requires:
+    #     - build
+    # - integration:
+    #     requires:
+    #     - test
+    - release:
+        requires:
+     #   - integration
+        - build
+        - build-arm64
